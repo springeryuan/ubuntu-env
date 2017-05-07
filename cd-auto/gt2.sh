@@ -150,9 +150,11 @@ function _gg {
 shopt -s progcomp
 complete -o dirnames -F _gg gg
 
-readarray -t MYARRAY < ~/.dirstack
-for (( idx=${#MYARRAY[@]}-1 ; idx>=0 ; idx-- )) ; do
-    cd_internal "${MYARRAY[idx]}" > /dev/null
-done
+if [[ -f ~/.dirstack ]]; then
+    readarray -t MYARRAY < ~/.dirstack
+    for (( idx=${#MYARRAY[@]}-1 ; idx>=0 ; idx-- )) ; do
+        cd_internal "${MYARRAY[idx]}" > /dev/null
+    done
+fi
 
 dirs -v
