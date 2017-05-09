@@ -17,7 +17,7 @@
 
 dirsv () {
   if [[ -z $1 ]]; then
-      dirs -v | awk -F ' ' ' {print $1 $2} '
+      dirs -v | awk -F ' ' '{printf "%02d%s\n", $1, $2}'
   else
       dirs -v|awk -v var="$1" -F ' ' 'BEGIN{IGNORECASE=1}{printf "%03d %s\n",index($2, var), $2}' | sort | grep -v '^000' | awk -F ' ' '{print $2}' | head -1
   fi
@@ -36,16 +36,19 @@ cd_internal ()
   the_new_dir=$1
   [[ -z $1 ]] && the_new_dir=$HOME
 
-  re='[0-9]'
-  index=${the_new_dir:0:1}
-  if [[ ${index} =~ $re ]]; then
-      tmp_new_dir=${the_new_dir:1}
+  index=$(printf ${the_new_dir} | sed 's/^\([0-9]\+\).*/\1/')
+
+  if ! [[ -z ${index} ]]; then
+      tmp_new_dir=$(echo ${the_new_dir} | sed 's/^[0-9]\+//')
 
       if [[ -z ${tmp_new_dir} ]]; then
           the_new_dir=${tmp_new_dir}
       fi
 
-      if [[ -d ${tmp_new_dir} ]]; then
+      # don't know why this time we have to prepare full path:
+      [[ ${tmp_new_dir:0:1} == '~' ]] && tmp_new_dir="${HOME}${tmp_new_dir:1}"
+
+      if [[ -d "${tmp_new_dir}" ]]; then
           the_new_dir=${tmp_new_dir}
       fi
 
@@ -82,9 +85,9 @@ cd_internal ()
 
   the_new_dir=$(pwd)
 
-  popd -n +10 2>/dev/null 1>/dev/null
+  popd -n +20 2>/dev/null 1>/dev/null
 
-  for ((cnt=1; cnt <= 10; cnt++)); do
+  for ((cnt=1; cnt <= 20; cnt++)); do
     x2=$(dirs +${cnt} 2>/dev/null)
     [[ $? -ne 0 ]] && break
 
