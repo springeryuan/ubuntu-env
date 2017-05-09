@@ -19,7 +19,7 @@ dirsv () {
   if [[ -z $1 ]]; then
       dirs -v | awk -F ' ' '{printf "%02d%s\n", $1, $2}'
   else
-      dirs -v|awk -v var="$1" -F ' ' 'BEGIN{IGNORECASE=1}{printf "%03d %s\n",index($2, var), $2}' | sort | grep -v '^000' | awk -F ' ' '{print $2}' | head -1
+      dirs -v|awk -v var="$1" -F ' ' 'BEGIN{IGNORECASE=1}{printf "%03d %s\n",match($2, var), $2}' | sort | grep -v '^000' | awk -F ' ' '{print $2}' | head -1
   fi
 }
 
