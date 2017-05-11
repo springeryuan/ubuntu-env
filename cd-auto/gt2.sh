@@ -85,9 +85,9 @@ cd_internal ()
 
   the_new_dir=$(pwd)
 
-  popd -n +20 2>/dev/null 1>/dev/null
+  popd -n +30 2>/dev/null 1>/dev/null
 
-  for ((cnt=1; cnt <= 20; cnt++)); do
+  for ((cnt=1; cnt <= 30; cnt++)); do
     x2=$(dirs +${cnt} 2>/dev/null)
     [[ $? -ne 0 ]] && break
 
@@ -107,13 +107,15 @@ function init_dirstack()
 {
 
     if [[ -f ~/.dirstack ]]; then
+        the_cur_dir=$(pwd)
         dirs -c
         readarray -t MYARRAY < ~/.dirstack
         for (( idx=${#MYARRAY[@]}-1 ; idx>=0 ; idx-- )) ; do
             the_new_dir="${MYARRAY[idx]}"
             [[ ${the_new_dir:0:1} == '~' ]] && the_new_dir="${HOME}${the_new_dir:1}"
-            pushd "${the_new_dir}" > /dev/null
+            pushd -n "${the_new_dir}" > /dev/null
         done
+        cd_internal "${the_cur_dir}"
     fi
 
     dirs -v
@@ -121,6 +123,7 @@ function init_dirstack()
 }
 
 alias gg=cd_internal
+alias ii=init_dirstack
 
 
 function _gg {
