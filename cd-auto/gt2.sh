@@ -19,7 +19,7 @@ dirsv () {
   if [[ -z $1 ]]; then
       dirs -v | awk -F ' ' '{printf "%02d%s\n", $1, $2}'
   else
-      dirs -v|awk -v var="$1" -F ' ' 'BEGIN{IGNORECASE=1}{printf "%03d %s\n",index($2, var), $2}' | sort | grep -v '^000' | awk -F ' ' '{print $2}' | head -1
+      dirs -v|awk -v var="$1" -F ' ' 'BEGIN{IGNORECASE=1}{printf "%03d %s\n",match($2, var), $2}' | sort | grep -v '^000' | awk -F ' ' '{print $2}' | head -1
   fi
 }
 
@@ -36,10 +36,10 @@ cd_internal ()
   the_new_dir=$1
   [[ -z $1 ]] && the_new_dir=$HOME
 
-  index=$(printf ${the_new_dir} | sed 's/^\([0-9]\+\).*/\1/')
+  index=$(printf ${the_new_dir} | sed 's/^\([0-9][0-9]\).*/\1/')
 
   if ! [[ -z ${index} ]]; then
-      tmp_new_dir=$(echo ${the_new_dir} | sed 's/^[0-9]\+//')
+      tmp_new_dir=$(echo ${the_new_dir} | sed 's/^[0-9][0-9]//')
 
       if [[ -z ${tmp_new_dir} ]]; then
           the_new_dir=${tmp_new_dir}
@@ -103,37 +103,21 @@ cd_internal ()
   return 0
 }
 
-function cd_direct()
+function init_dirstack()
 {
 
-  the_new_dir=$1
-  [[ -z $1 ]] && the_new_dir=$HOME
-
-
-  [[ ${the_new_dir:0:1} == '~' ]] && the_new_dir="${HOME}${the_new_dir:1}"
-
-  pushd "${the_new_dir}" > /dev/null
-  [[ $? -ne 0 ]] && return 1
-  the_new_dir=$(pwd)
-
-  popd -n +10 2>/dev/null 1>/dev/null
-
-  for ((cnt=1; cnt <= 10; cnt++)); do
-    x2=$(dirs +${cnt} 2>/dev/null)
-    [[ $? -ne 0 ]] && return 0
-
-    [[ ${x2:0:1} == '~' ]] && x2="${HOME}${x2:1}"
-    if [[ "${x2}" == ${the_new_dir} ]]; then
-      popd -n +$cnt 2>/dev/null 1>/dev/null
-
-      if [[ ${cnt} -gt 1 ]]; then
-          cnt=(${cnt}-1)
-      fi
+    if [[ -f ~/.dirstack ]]; then
+        dirs -c
+        readarray -t MYARRAY < ~/.dirstack
+        for (( idx=${#MYARRAY[@]}-1 ; idx>=0 ; idx-- )) ; do
+            the_new_dir="${MYARRAY[idx]}"
+            [[ ${the_new_dir:0:1} == '~' ]] && the_new_dir="${HOME}${the_new_dir:1}"
+            pushd "${the_new_dir}" > /dev/null
+        done
     fi
-  done
 
-  return 0
-
+    dirs -v
+    return 0
 }
 
 alias gg=cd_internal
@@ -153,11 +137,4 @@ function _gg {
 shopt -s progcomp
 complete -o dirnames -F _gg gg
 
-if [[ -f ~/.dirstack ]]; then
-    readarray -t MYARRAY < ~/.dirstack
-    for (( idx=${#MYARRAY[@]}-1 ; idx>=0 ; idx-- )) ; do
-        cd_internal "${MYARRAY[idx]}" > /dev/null
-    done
-fi
-
-dirs -v
+init_dirstack
