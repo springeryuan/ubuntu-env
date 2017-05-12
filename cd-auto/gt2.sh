@@ -36,10 +36,10 @@ cd_internal ()
   the_new_dir=$1
   [[ -z $1 ]] && the_new_dir=$HOME
 
-  index=$(printf ${the_new_dir} | sed 's/^\([0-9][0-9]\).*/\1/')
+  index=$(printf ${the_new_dir} | sed 's/^\([0-9][0-9]\?\).*/\1/')
 
   if ! [[ -z ${index} ]]; then
-      tmp_new_dir=$(echo ${the_new_dir} | sed 's/^[0-9][0-9]//')
+      tmp_new_dir=$(echo ${the_new_dir} | sed 's/^[0-9][0-9]\?//')
 
       if [[ -z ${tmp_new_dir} ]]; then
           the_new_dir=${tmp_new_dir}
