@@ -19,7 +19,7 @@ dirsv () {
   if [[ -z $1 ]]; then
       dirs -v | awk -F ' ' '{printf "%02d%s\n", $1, $2}'
   else
-      dirs -v|awk -v var="$1" -F ' ' 'BEGIN{IGNORECASE=1}{printf "%03d %s\n",match($2, var), $2}' | sort | grep -v '^000' | awk -F ' ' '{print $2}' | head -1
+      dirs -v|awk -v var="$1" -F ' ' 'BEGIN{IGNORECASE=1}{printf "%03d%03d%03d %02d%s\n",match($2, var), RLENGTH, length($2),$1, $2}' | sort | grep -v '^000' | awk -F ' ' '{print $2}'
   fi
 }
 
@@ -74,10 +74,18 @@ cd_internal ()
   if [[ $? -ne 0 ]]; then
 
     comlist=$(dirsv ${the_new_dir})
+
+    echo "--- Before gg ---"
+    echo "${comlist}"
     [[ -z $comlist ]] && return 1
 
-    cd_internal ${comlist}
 
+    target_dir=$(printf ${comlist} | head -1)
+    cd_internal ${target_dir}
+
+    comlist=$(dirsv ${the_new_dir})
+    echo "--- After  gg ---"
+    echo "${comlist}"
 
     return 0
   fi
