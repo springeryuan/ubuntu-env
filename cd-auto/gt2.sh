@@ -23,10 +23,29 @@ dirsv () {
   fi
 }
 
+# Not use for now
+dirsvim () {
+  if [[ -z $1 ]]; then
+      dirs -v | awk -F ' ' '{printf "%02d%s\n", $1, $2}'
+  else
+      dirs -v|awk -v var="$1" -F ' ' 'BEGIN{IGNORECASE=1}{printf "%03d%03d%03d %s\n",match($2, var), RLENGTH, length($2), $2}' | sort | grep -v '^000' | awk -F ' ' '{print $2}' | head -1
+  fi
+}
+
+# called by .vimrc
+scdforvim () {
+    cd_internal "$1" 1>/dev/null
+    if ! [[ -z ${glb_new_dir} ]]; then
+        echo "${glb_new_dir}"
+    fi
+}
+
 cd_internal ()
 {
   local x2 the_new_dir adir index
   local -i cnt
+
+  glb_new_dir=""
 
   if [[ $1 ==  "--" ]]; then
     dirs -v
@@ -75,8 +94,8 @@ cd_internal ()
 
     comlist=$(dirsv ${the_new_dir})
 
-    echo "--- Before gg ---"
-    echo "${comlist}"
+    #echo "--- Before gg ---"
+    #echo "${comlist}"
     [[ -z $comlist ]] && return 1
 
 
@@ -108,6 +127,7 @@ cd_internal ()
 
   dirs -v | awk -F ' ' ' {print $2} ' > ~/.dirstack
 
+  glb_new_dir="${the_new_dir}"
   return 0
 }
 
