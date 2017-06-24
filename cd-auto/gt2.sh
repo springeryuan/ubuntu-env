@@ -19,7 +19,9 @@ dirsv () {
   if [[ -z $1 ]]; then
       dirs -v | awk -F ' ' '{printf "%02d%s\n", $1, $2}'
   else
-      dirs -v|awk -v var="$1" -F ' ' 'BEGIN{IGNORECASE=1}{printf "%03d%03d%03d %02d%s\n",match($2, var), RLENGTH, length($2),$1, $2}' | sort | grep -v '^000' | awk -F ' ' '{print $2}'
+      cur_dir=$(pwd)
+      #echo "cur dir: ${cur_dir}"
+      dirs -v -l|awk -v var1="$1" -v var2="${cur_dir}" -F ' ' 'BEGIN{IGNORECASE=1}{printf "%01d%03d%03d%03d %02d%s\n",(1-match($2,var2)), match($2, var1), RLENGTH, length($2), $1, $2}' | sort | grep -v '^[0-1]000' | grep -v ".*${cur_dir}$" | awk -F ' ' '{print $2}'
   fi
 }
 
@@ -28,6 +30,7 @@ dirsvim () {
   if [[ -z $1 ]]; then
       dirs -v | awk -F ' ' '{printf "%02d%s\n", $1, $2}'
   else
+
       dirs -v|awk -v var="$1" -F ' ' 'BEGIN{IGNORECASE=1}{printf "%03d%03d%03d %s\n",match($2, var), RLENGTH, length($2), $2}' | sort | grep -v '^000' | awk -F ' ' '{print $2}' | head -1
   fi
 }
@@ -100,6 +103,7 @@ cd_internal ()
 
 
     target_dir=$(printf ${comlist} | head -1)
+    echo "target dir: ${target_dir}"
     cd_internal ${target_dir}
 
     comlist=$(dirsv ${the_new_dir})
@@ -110,7 +114,7 @@ cd_internal ()
   fi
 
 
-  the_new_dir=$(pwd)
+  cur_dir2=$(pwd)
 
   popd -n +30 2>/dev/null 1>/dev/null
 
@@ -119,7 +123,7 @@ cd_internal ()
     [[ $? -ne 0 ]] && break
 
     [[ ${x2:0:1} == '~' ]] && x2="${HOME}${x2:1}"
-    if [[ "${x2}" == ${the_new_dir} ]]; then
+    if [[ "${x2}" == ${cur_dir2} ]]; then
       popd -n +$cnt 2>/dev/null 1>/dev/null
       cnt=(${cnt}-1)
     fi
@@ -127,7 +131,7 @@ cd_internal ()
 
   dirs -v | awk -F ' ' ' {print $2} ' > ~/.dirstack
 
-  glb_new_dir="${the_new_dir}"
+  glb_new_dir="${cur_dir2}"
   return 0
 }
 
